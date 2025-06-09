@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Select, MenuItem, FormControl, TextField } from "@mui/material";
 import { AxiosError } from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { createTask, updateTask } from "@/api/taskApi";
+import { getAllUsers } from "@/api/userApi";
 import FormDialog from "@/app/content/components/FormDialog";
 import Label from "@/app/content/components/Label";
-import { Task } from "@/ultils/types";
+import { PersonalTask, Task } from "@/ultils/types";
 import { TaskStatus } from "@/ultils/enum";
 import { taskStatus } from "@/constant/constantTaskStatus";
 
@@ -33,19 +34,27 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [taskId, setTaskId] = useState("");
+  const [assignedUserId, setAssignedUserId] = useState("");
 
   const queryClient = useQueryClient();
+  const { data: allUsers, isLoading } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => getAllUsers(),
+  });
+
   useEffect(() => {
     if (task && task._id) {
       setStatus(task.status);
       setContent(task.content);
       setTitle(task.title);
       setTaskId(task._id);
+      setAssignedUserId(task.assignedTo ? task.assignedTo : "");
     } else {
       setStatus(TaskStatus.toDO);
       setTitle("");
       setContent("");
       setTaskId("");
+      setAssignedUserId("");
     }
   }, [task]);
   // Mutation for creating a task
@@ -59,6 +68,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setStatus(TaskStatus.toDO);
       setTitle("");
       setContent("");
+      setAssignedUserId("");
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       console.error(
@@ -86,13 +96,15 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   });
   // Handle confirm action (Create or Update)
   const handleConfirm = async () => {
-    const personalTask = { title, content, status };
+    const personalTask = { title, content, status, assignedTo: assignedUserId };
     if (isEdit) {
       await updateUserTask({ userId, taskId, personalTask });
     } else {
       await createUserTask({ userId, personalTask });
     }
   };
+  console.log("test assignedUserId", assignedUserId);
+  console.log("test isEdit", isEdit);
 
   return (
     <FormDialog
@@ -126,6 +138,21 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
             </MenuItem>
           ))}
         </Select>
+      </FormControl>
+      <FormControl fullWidth margin="normal">
+        <Label text="Assigned to:" />
+        {!isLoading && allUsers && (
+          <Select
+            value={assignedUserId}
+            onChange={(e) => setAssignedUserId(e.target.value)}
+          >
+            {allUsers.map((user: PersonalTask) => (
+              <MenuItem key={user._id} value={user._id}>
+                {user.userName}
+              </MenuItem>
+            ))}
+          </Select>
+        )}
       </FormControl>
     </FormDialog>
   );

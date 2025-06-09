@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const handleOpenDialog = () => {
     setTaskDialogOpen(true);
     setSelectedTask(null);
+    setIsEdit(false);
   };
 
   return (

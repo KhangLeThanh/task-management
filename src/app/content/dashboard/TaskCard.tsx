@@ -61,8 +61,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     setTaskDialogOpen(true);
     setIsEdit(true);
   };
-  console.log("test doneTask", doneTask);
-  console.log("test inProgressTask", inProgressTask);
 
   return (
     <Box sx={{ padding: 3 }}>
