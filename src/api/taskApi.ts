@@ -1,12 +1,15 @@
 import axios from "axios";
 import { APIURL } from "../constant/baseUrl";
-import { Task } from "@/ultils/types";
+import { TaskResponse } from "@/ultils/types";
 
-export const getTask = async (userId: string | undefined, status?: string) => {
+export const getTask = async (status?: string, assignedTo?: string) => {
   try {
-    const response = await axios.get(`${APIURL}/tasks/${userId}/task`, {
+    const response = await axios.get(`${APIURL}/tasks`, {
       withCredentials: true,
-      params: status ? { status } : {},
+      params: {
+        ...(status && { status }),
+        ...(assignedTo && { assignedTo }),
+      },
     });
     return response.data;
   } catch (error: any) {
@@ -15,18 +18,14 @@ export const getTask = async (userId: string | undefined, status?: string) => {
 };
 
 export const createTask = async ({
-  userId,
   personalTask,
 }: {
-  userId: string | null;
-  personalTask: Task;
+  personalTask: TaskResponse;
 }) => {
   try {
-    const response = await axios.post(
-      `${APIURL}/tasks/${userId}/task`,
-      personalTask,
-      { withCredentials: true }
-    );
+    const response = await axios.post(`${APIURL}/tasks`, personalTask, {
+      withCredentials: true,
+    });
     return response.data;
   } catch (error: any) {
     console.log("test error", error);
@@ -34,17 +33,15 @@ export const createTask = async ({
 };
 
 export const updateTask = async ({
-  userId,
   taskId,
   personalTask,
 }: {
-  userId: string | null;
-  personalTask: Task;
+  personalTask: TaskResponse;
   taskId: string;
 }) => {
   try {
     const response = await axios.patch(
-      `${APIURL}/tasks/${userId}/task/${taskId}`,
+      `${APIURL}/tasks/${taskId}`,
       personalTask,
       { withCredentials: true }
     );

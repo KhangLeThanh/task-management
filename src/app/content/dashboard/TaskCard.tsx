@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Box,
   Card,
@@ -7,6 +7,7 @@ import {
   Button,
   CardHeader,
   Grid,
+  Avatar,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { TaskStatus } from "@/ultils/enum";
@@ -14,48 +15,34 @@ import { Task } from "@/ultils/types";
 import { getTask } from "@/api/taskApi";
 
 type TaskCardProps = {
-  userId: string;
   setSelectedTask: (task: Task) => void;
   setTaskDialogOpen: (open: boolean) => void;
   setIsEdit: (isEdit: boolean) => void;
+  listUserId: string[];
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({
-  userId,
   setSelectedTask,
   setIsEdit,
   setTaskDialogOpen,
+  listUserId,
 }) => {
-  const { data: toDoTask } = useQuery({
-    queryKey: ["tasks", userId, TaskStatus.toDO],
-    queryFn: () => getTask(userId, TaskStatus.toDO),
-    enabled: !!userId,
-  });
-  const { data: inProgressTask } = useQuery({
-    queryKey: ["tasks", userId, TaskStatus.inProgress],
-    queryFn: () => getTask(userId, TaskStatus.inProgress),
-    enabled: !!userId,
-  });
-  const { data: doneTask } = useQuery({
-    queryKey: ["tasks", userId, TaskStatus.done],
-    queryFn: () => getTask(userId, TaskStatus.done),
-    enabled: !!userId,
-  });
-  const [toDoTasks, setToDoTasks] = useState<Task[]>([]);
-  const [inProgressTasks, setInProgressTask] = useState<Task[]>([]);
-  const [doneTasks, setDoneTasks] = useState<Task[]>([]);
+  const assignedToParam =
+    listUserId.length > 0 ? listUserId.join(",") : undefined;
 
-  useEffect(() => {
-    if (toDoTask) {
-      setToDoTasks(toDoTask.personalTasks);
-    }
-    if (inProgressTask) {
-      setInProgressTask(inProgressTask.personalTasks);
-    }
-    if (doneTask) {
-      setDoneTasks(doneTask.personalTasks);
-    }
-  }, [toDoTask, inProgressTask, doneTask]);
+  const { data: toDoTask } = useQuery<Task[]>({
+    queryKey: ["tasks", TaskStatus.toDO, assignedToParam],
+    queryFn: () => getTask(TaskStatus.toDO, assignedToParam),
+  });
+  const { data: inProgressTask } = useQuery<Task[]>({
+    queryKey: ["tasks", TaskStatus.inProgress, assignedToParam],
+    queryFn: () => getTask(TaskStatus.inProgress, assignedToParam),
+  });
+  const { data: doneTask } = useQuery<Task[]>({
+    queryKey: ["tasks", TaskStatus.done, assignedToParam],
+    queryFn: () => getTask(TaskStatus.done, assignedToParam),
+  });
+
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
     setTaskDialogOpen(true);
@@ -69,104 +56,148 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <Typography variant="h6" sx={{ marginBottom: 2 }}>
             To Do
           </Typography>
-          {toDoTasks.map((task) => (
-            <Card key={task._id} sx={{ marginBottom: 2 }}>
-              <CardHeader
-                title={
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    Title: {task.title}
+          {toDoTask &&
+            toDoTask.map((task) => (
+              <Card key={task._id} sx={{ marginBottom: 2 }}>
+                <CardHeader
+                  title={
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                        Title: {task.title}
+                      </Typography>
+                      {Object.hasOwn(task, "assignedTo") && (
+                        <Avatar> {task.assignedTo?.userName.charAt(0)}</Avatar>
+                      )}
+                    </Box>
+                  }
+                />
+                <CardContent>
+                  <Typography variant="body1">
+                    Content: {task.content}
                   </Typography>
-                }
-              />
-              <CardContent>
-                <Typography variant="body1">Content: {task.content}</Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: 1,
-                  }}
-                >
-                  <Button
-                    size="small"
-                    color="primary"
-                    onClick={() => handleEditTask(task)}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 1,
+                    }}
                   >
-                    Edit
-                  </Button>
-                  <Button size="small" color="error">
-                    Delete
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
+                    <Button
+                      size="small"
+                      color="primary"
+                      onClick={() => handleEditTask(task)}
+                    >
+                      Edit
+                    </Button>
+                    <Button size="small" color="error">
+                      Delete
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
         </Grid>
         <Grid size={4}>
           <Typography variant="h6" sx={{ marginBottom: 2 }}>
             In Progress
           </Typography>
-          {inProgressTasks.map((task) => (
-            <Card key={task._id} sx={{ marginBottom: 2 }}>
-              <CardHeader
-                title={
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    Title: {task.title}
+          {inProgressTask &&
+            inProgressTask.map((task) => (
+              <Card key={task._id} sx={{ marginBottom: 2 }}>
+                <CardHeader
+                  title={
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                        Title: {task.title}
+                      </Typography>
+                      {Object.hasOwn(task, "assignedTo") && (
+                        <Avatar> {task.assignedTo?.userName.charAt(0)}</Avatar>
+                      )}
+                    </Box>
+                  }
+                />
+                <CardContent>
+                  <Typography variant="body1">
+                    Content: {task.content}
                   </Typography>
-                }
-              />
-              <CardContent>
-                <Typography variant="body1">Content: {task.content}</Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: 1,
-                  }}
-                >
-                  <Button size="small" color="primary">
-                    Edit
-                  </Button>
-                  <Button size="small" color="error">
-                    Delete
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 1,
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      color="primary"
+                      onClick={() => handleEditTask(task)}
+                    >
+                      Edit
+                    </Button>
+                    <Button size="small" color="error">
+                      Delete
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
         </Grid>
         <Grid size={4}>
           <Typography variant="h6" sx={{ marginBottom: 2 }}>
             Done
           </Typography>
-          {doneTasks.map((task) => (
-            <Card key={task._id} sx={{ marginBottom: 2 }}>
-              <CardHeader
-                title={
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    Title: {task.title}
+          {doneTask &&
+            doneTask.map((task) => (
+              <Card key={task._id} sx={{ marginBottom: 2 }}>
+                <CardHeader
+                  title={
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                        Title: {task.title}
+                      </Typography>
+                      {Object.hasOwn(task, "assignedTo") && (
+                        <Avatar> {task.assignedTo?.userName.charAt(0)}</Avatar>
+                      )}
+                    </Box>
+                  }
+                />
+                <CardContent>
+                  <Typography variant="body1">
+                    Content: {task.content}
                   </Typography>
-                }
-              />
-              <CardContent>
-                <Typography variant="body1">Content: {task.content}</Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: 1,
-                  }}
-                >
-                  <Button size="small" color="primary">
-                    Edit
-                  </Button>
-                  <Button size="small" color="error">
-                    Delete
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      marginTop: 1,
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      color="primary"
+                      onClick={() => handleEditTask(task)}
+                    >
+                      Edit
+                    </Button>
+                    <Button size="small" color="error">
+                      Delete
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
         </Grid>
       </Grid>
     </Box>

@@ -6,7 +6,7 @@ import { createTask, updateTask } from "@/api/taskApi";
 import { getAllUsers } from "@/api/userApi";
 import FormDialog from "@/app/content/components/FormDialog";
 import Label from "@/app/content/components/Label";
-import { PersonalTask, Task } from "@/ultils/types";
+import { PersonalTask, Task, TaskResponse } from "@/ultils/types";
 import { TaskStatus } from "@/ultils/enum";
 import { taskStatus } from "@/constant/constantTaskStatus";
 
@@ -16,7 +16,7 @@ type TaskDialogProps = {
   onConfirm: () => void;
   task: Task | null;
   isEdit?: boolean;
-  userId: string | null;
+  userId: string;
 };
 
 type ErrorResponse = {
@@ -48,7 +48,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setContent(task.content);
       setTitle(task.title);
       setTaskId(task._id);
-      setAssignedUserId(task.assignedTo ? task.assignedTo : "");
+      setAssignedUserId(task.assignedTo ? task.assignedTo._id : "");
     } else {
       setStatus(TaskStatus.toDO);
       setTitle("");
@@ -57,18 +57,18 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setAssignedUserId("");
     }
   }, [task]);
+  const invalidateAllTaskQueries = () => {
+    queryClient.invalidateQueries({
+      predicate: (query) => query.queryKey[0] === "tasks",
+    });
+  };
   // Mutation for creating a task
   const { mutateAsync: createUserTask } = useMutation({
     mutationFn: createTask,
     onSuccess: async () => {
-      const queryKey = userId ? ["tasks", userId] : ["tasks"];
-      await queryClient.refetchQueries({ queryKey });
+      invalidateAllTaskQueries();
       onConfirm();
       onClose();
-      setStatus(TaskStatus.toDO);
-      setTitle("");
-      setContent("");
-      setAssignedUserId("");
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       console.error(
@@ -80,13 +80,9 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const { mutateAsync: updateUserTask } = useMutation({
     mutationFn: updateTask,
     onSuccess: async () => {
-      const queryKey = userId ? ["tasks", userId] : ["tasks"];
-      await queryClient.refetchQueries({ queryKey });
+      invalidateAllTaskQueries();
       onConfirm();
       onClose();
-      setStatus(TaskStatus.toDO);
-      setTitle("");
-      setContent("");
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       console.error(
@@ -96,15 +92,20 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   });
   // Handle confirm action (Create or Update)
   const handleConfirm = async () => {
-    const personalTask = { title, content, status, assignedTo: assignedUserId };
+    let personalTask: TaskResponse = {
+      title,
+      content,
+      status,
+      assignedTo: assignedUserId,
+    };
     if (isEdit) {
-      await updateUserTask({ userId, taskId, personalTask });
+      await updateUserTask({ taskId, personalTask });
     } else {
-      await createUserTask({ userId, personalTask });
+      personalTask = { ...personalTask, user: userId };
+
+      await createUserTask({ personalTask });
     }
   };
-  console.log("test assignedUserId", assignedUserId);
-  console.log("test isEdit", isEdit);
 
   return (
     <FormDialog
