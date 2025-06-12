@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useEffect, useState, createContext, useContext } from "react";
-import { Box, AppBar, Toolbar, Typography, Avatar } from "@mui/material";
+import { useRouter } from "next/navigation";
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  Avatar,
+  IconButton,
+} from "@mui/material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Sidebar from "@/app/content/components/Sidebar";
 import axios from "axios";
 import { APIURL } from "@/constant/baseUrl";
@@ -27,6 +36,7 @@ export default function ContentLayout({
 }) {
   const [user, setUser] = useState<PersonalTask | null>(null);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -46,7 +56,21 @@ export default function ContentLayout({
     };
     fetchUser();
   }, []);
-
+  const handleLogOut = async () => {
+    try {
+      await axios.post(`${APIURL}/logout`, {
+        withCredentials: true,
+      });
+      localStorage.removeItem("userId");
+      router.push("/auth/login");
+    } catch (error: any) {
+      if (error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else {
+        setError("Login failed");
+      }
+    }
+  };
   return (
     <UserContext.Provider value={{ user, errorUser: error }}>
       <Box sx={{ display: "flex", height: "100vh" }}>
@@ -64,12 +88,11 @@ export default function ContentLayout({
               <Typography variant="h6" component="div">
                 MyLogo
               </Typography>
-
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography sx={{ marginRight: 2 }}>
-                  {user?.userName || "Loading..."}
-                </Typography>
                 <Avatar alt={user?.userName || ""} src="/avatar.jpg" />
+                <IconButton onClick={handleLogOut}>
+                  <ArrowDropDownIcon />
+                </IconButton>
               </Box>
             </Toolbar>
           </AppBar>
