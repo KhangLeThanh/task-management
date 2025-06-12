@@ -3,7 +3,7 @@ import { APIURL } from "../constant/baseUrl";
 
 export const getAllUsers = async () => {
   try {
-    const response = await axios.get(`${APIURL}/users`, {
+    const response = await axios.get(`${APIURL}/users?status=true`, {
       withCredentials: true,
     });
     return response.data;
