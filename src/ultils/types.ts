@@ -30,5 +30,6 @@ export type TaskResponse = {
 export type PersonalTask = {
   userName: string;
   _id: string;
+  status: boolean;
   personalTasks: Task[];
 };

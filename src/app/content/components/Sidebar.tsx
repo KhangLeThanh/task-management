@@ -13,7 +13,10 @@ import {
 } from "@mui/material";
 
 const drawerWidth = 240;
-
+const navItems = [
+  { label: "Dashboard", href: "/content/dashboard" },
+  { label: "User Management", href: "/content/user-management" },
+];
 export default function Sidebar() {
   const pathname = usePathname();
 
@@ -32,20 +35,16 @@ export default function Sidebar() {
       <Toolbar />
       <Box sx={{ overflow: "auto" }}>
         <List>
-          <ListItemButton
-            component={Link}
-            href="/content/dashboard"
-            selected={pathname === "/dashboard"}
-          >
-            <ListItemText primary="Dashboard" />
-          </ListItemButton>
-          <ListItemButton
-            component={Link}
-            href="/content/user-management"
-            selected={pathname === "/user-management"}
-          >
-            <ListItemText primary="User Management" />
-          </ListItemButton>
+          {navItems.map(({ label, href }) => (
+            <ListItemButton
+              key={href}
+              component={Link}
+              href={href}
+              selected={pathname === href}
+            >
+              <ListItemText primary={label} />
+            </ListItemButton>
+          ))}
         </List>
       </Box>
     </Drawer>

@@ -5,13 +5,19 @@ export enum UIButtonVariants {
   UNDERLINED = "underlined",
 }
 
-export enum SortingDirectionEnum {
-  ASCENDING = "asc",
-  DESCENDING = "desc",
+export enum MenuPositions {
+  TOP = "top",
+  BOTTOM = "bottom",
+  LEFT = "left",
+  RIGHT = "right",
+  CENTER = "center",
 }
-
 export enum TaskStatus {
   toDO = "toDo",
   inProgress = "inProgress",
   done = "done",
+}
+export enum UserStatus {
+  active = "Active",
+  inActive = "inActive",
 }
